@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Η Βεράντα μου | Chill Radio & Live Clock</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #ffffff;
+            transition: background 1.5s ease;
+            position: relative;
+        }
+        /* Sky Themes */
+        body.morning { background: linear-gradient(180deg, #56ccf2 0%, #89f7fe 55%, #fbc2eb 100%); }
+        body.day { background: linear-gradient(180deg, #2980b9 0%, #6dd5fa 65%, #ffffff 100%); }
+        body.sunset { background: linear-gradient(180deg, #2c3e50 0%, #fd746c 55%, #ff9068 100%); }
+        body.night { background: linear-gradient(180deg, #090d16 0%, #162238 60%, #243b55 100%); }
+
+        /* Stars & Celestial Body */
+        .stars { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.5s; background-image: radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 140px 70px, #fff, transparent), radial-gradient(1.5px 1.5px at 260px 40px, #fff, transparent), radial-gradient(2px 2px at 380px 90px, #fff, transparent), radial-gradient(1.5px 1.5px at 520px 50px, #fff, transparent), radial-gradient(2px 2px at 720px 80px, #fff, transparent); background-size: 800px 250px; }
+        body.night .stars { opacity: 0.85; }
+        .celestial { position: absolute; top: 10%; right: 14%; width: 70px; height: 70px; border-radius: 50%; transition: all 1.5s ease; pointer-events: none; }
+        body.morning .celestial, body.day .celestial { background: #fff7ae; box-shadow: 0 0 50px #ffeaa7; }
+        body.sunset .celestial { top: 38%; background: #ff7675; box-shadow: 0 0 60px #fab1a0; }
+        body.night .celestial { background: #f5f6fa; box-shadow: 0 0 25px rgba(255,255,255,0.6); }
+
+        /* Rain effect */
+        .rain { position: absolute; inset: 0; pointer-events: none; display: none; background: repeating-linear-gradient(105deg, transparent 0px, transparent 18px, rgba(255,255,255,0.18) 19px, transparent 20px); animation: rainFall 0.6s linear infinite; }
+        body.raining .rain { display: block; }
+        @keyframes rainFall { from { background-position: 0 0; } to { background-position: -20px 40px; } }
+
+        /* Top Bar & Clock */
+        .top-bar { z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 32px; flex-wrap: wrap; gap: 12px; }
+        .clock-box { background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(10px); padding: 16px 24px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.18); }
+        .time { font-size: 46px; font-weight: 700; letter-spacing: 2px; line-height: 1; }
+        .date { font-size: 15px; opacity: 0.9; margin-top: 6px; text-transform: capitalize; }
+        .weather-controls { display: flex; gap: 6px; flex-wrap: wrap; background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(10px); padding: 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.18); }
+        .weather-controls button { background: transparent; border: none; color: white; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
+        .weather-controls button.active, .weather-controls button:hover { background: rgba(255,255,255,0.25); }
+
+        /* Balcony Scene */
+        .balcony-scene { position: relative; z-index: 5; width: 100%; height: 240px; display: flex; flex-direction: column; justify-content: flex-end; }
+        .railing { width: 100%; height: 110px; border-top: 8px solid #2d3436; border-bottom: 10px solid #2d3436; background: repeating-linear-gradient(90deg, #2d3436 0px, #2d3436 6px, transparent 6px, transparent 58px); opacity: 0.85; }
+        .floor { width: 100%; height: 85px; background: linear-gradient(180deg, #3d312a 0%, #261e1a 100%); border-top: 4px solid #4e3f36; position: relative; display: flex; justify-content: center; align-items: flex-end; }
+
+        /* Cozy Radio Widget on Table */
+        .radio-table { position: absolute; bottom: 25px; background: rgba(24, 24, 27, 0.78); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.15); border-radius: 22px; padding: 18px 24px; width: 92%; max-width: 440px; box-shadow: 0 15px 35px rgba(0,0,0,0.45); }
+        .radio-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .station-title { font-size: 15px; font-weight: 700; color: #fde68a; }
+        .live-dot { display: inline-block; width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-right: 6px; }
+        .stations-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .station-btn { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #eee; padding: 7px 8px; border-radius: 10px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .station-btn.active { background: #f59e0b; color: #111; font-weight: 700; border-color: #f59e0b; }
+        .controls-row { display: flex; align-items: center; gap: 14px; }
+        .play-btn { background: #f59e0b; color: #111; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        input[type="range"] { flex: 1; accent-color: #f59e0b; cursor: pointer; }
+        /* Warm Lantern Glow at Night */
+        .lantern { position: absolute; left: 10%; bottom: 115px; width: 28px; height: 42px; background: #fef08a; border-radius: 8px; border: 3px solid #2d3436; box-shadow: 0 0 35px #facc15; opacity: 0; transition: opacity 1.5s; }
+        body.night .lantern, body.sunset .lantern { opacity: 0.95; }
+        .plant { position: absolute; right: 10%; bottom: 85px; font-size: 52px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
+    </style>
+</head>
+<body class="day">
+    <div class="stars"></div>
+    <div class="rain"></div>
+    <div class="celestial"></div>
+
+    <div class="top-bar">
+        <div class="clock-box">
+            <div class="time" id="clock">00:00</div>
+            <div class="date" id="date">Φόρτωση ημερομηνίας...</div>
+        </div>
+        <div class="weather-controls">
+            <button class="active" onclick="setMode('auto', this)">🕒 Αυτόματο</button>
+            <button onclick="setMode('morning', this)">🌅 Πρωί</button>
+            <button onclick="setMode('day', this)">☀️ Μέρα</button>
+            <button onclick="setMode('sunset', this)">🌇 Δειλινό</button>
+            <button onclick="setMode('night', this)">🌙 Νύχτα</button>
+            <button onclick="toggleRain(this)">🌧️ Βροχή</button>
+        </div>
+    </div>
+
+    <div class="balcony-scene">
+        <div class="lantern"></div>
+        <div class="plant">🪴</div>
+        <div class="railing"></div>
+        <div class="floor">
+            <div class="radio-table">
+                <div class="radio-header">
+                    <div class="station-title"><span class="live-dot"></span><span id="current-station-name">Groove Salad — Chill & Ambient</span></div>
+                    <span style="font-size:12px; opacity:0.75;">☕ Βεράντα</span>
+                </div>
+                <div class="stations-row">
+                    <button class="station-btn active" onclick="selectStation(0, this)">🍃 Chill Ambient</button>
+                    <button class="station-btn" onclick="selectStation(1, this)">🎹 Soft Piano</button>
+                    <button class="station-btn" onclick="selectStation(2, this)">🌌 Deep Space</button>
+                </div>
+                <div class="controls-row">
+                    <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+                    <span style="font-size:14px;">🔈</span>
+                    <input type="range" min="0" max="1" step="0.05" value="0.6" oninput="audio.volume = this.value">
+                    <span style="font-size:14px;">🔊</span>
+                </div>
+                <audio id="radio-audio" preload="none"></audio>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const stations = [
+        { name: "Groove Salad — Chill & Ambient", url: "https://somafm.com" },
+        { name: "Lush — Soft Vocals & Melodies", url: "https://somafm.com" },
+        { name: "Drone Zone — Peaceful Atmospheric", url: "https://somafm.com" }
+    ];
+
+    const audio = document.getElementById("radio-audio");
+    const playBtn = document.getElementById("play-btn");
+    let currentIdx = 0;
+    let isPlaying = false;
+    let autoTime = true;
+
+    audio.src = stations[0].url;
+    audio.volume = 0.6;
+
+    function togglePlay() {
+        if (!isPlaying) {
+            audio.play().then(() => {
+                isPlaying = true;
+                playBtn.textContent = "⏸";
+            }).catch(() => alert("Πατήστε ξανά Play για να ξεκινήσει η ροή του σταθμού."));
+        } else {
+            audio.pause();
+            isPlaying = false;
+            playBtn.textContent = "▶";
+        }
+    }
+
+    function selectStation(idx, btn) {
+        currentIdx = idx;
+        document.querySelectorAll(".station-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("current-station-name").textContent = stations[idx].name;
+        audio.src = stations[idx].url;
+        if (isPlaying) audio.play();
+    }
+
+    function applySkyByHour(hour) {
+        const isRaining = document.body.classList.contains("raining");
+        document.body.className = isRaining ? "raining " : "";
+        if (hour >= 6 && hour < 12) document.body.classList.add("morning");
+        else if (hour >= 12 && hour < 17) document.body.classList.add("day");
+        else if (hour >= 17 && hour < 20) document.body.classList.add("sunset");
+        else document.body.classList.add("night");
+    }
+
+    function setMode(mode, btn) {
+        document.querySelectorAll(".weather-controls button:not(:last-child)").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const isRaining = document.body.classList.contains("raining");
+        if (mode === "auto") {
+            autoTime = true;
+            applySkyByHour(new Date().getHours());
+        } else {
+            autoTime = false;
+            document.body.className = (isRaining ? "raining " : "") + mode;
+        }
+    }
+
+    function toggleRain(btn) {
+        document.body.classList.toggle("raining");
+        btn.classList.toggle("active");
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").textContent = now.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
+        document.getElementById("date").textContent = now.toLocaleDateString("el-GR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+        if (autoTime) applySkyByHour(now.getHours());
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
