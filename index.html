@@ -3,254 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Η Βεράντα & ο Κήπος | Chill Radio & Live Clock</title>
+    <title>Παραλία & Χαλαρωτικό Ραδιόφωνο | Live Clock</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Georgia', 'Segoe UI', serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body {
             min-height: 100vh;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
             color: #ffffff;
-            background-color: #1a241b;
+            background: #0f172a;
             position: relative;
         }
 
-        /* Background Photo Layers (Garden & Flowers Courtyard) */
-        .bg-layer {
+        /* Realistic Beach Background */
+        .beach-bg {
             position: fixed;
             inset: 0;
+            background-image: url('https://wikimedia.org');
             background-size: cover;
-            background-position: center bottom;
-            transition: opacity 1.8s ease, filter 1.8s ease;
+            background-position: center;
+            transition: filter 1.6s ease, transform 8s ease;
             z-index: 1;
         }
-        /* Lush blooming courtyard garden */
-        .bg-image {
-            background-image: url('https://unsplash.com');
-        }
-        body.morning .bg-image { filter: brightness(1.05) saturate(1.1) sepia(0.12); }
-        body.day .bg-image { filter: brightness(1.1) saturate(1.15); }
-        body.sunset .bg-image { filter: brightness(0.88) saturate(1.35) sepia(0.35) hue-rotate(-12deg); }
-        body.night .bg-image { filter: brightness(0.35) saturate(0.85) hue-rotate(195deg); }
+        body.morning .beach-bg { filter: brightness(1.05) saturate(1.1) sepia(0.15); }
+        body.day .beach-bg { filter: brightness(1.08) saturate(1.15); }
+        body.sunset .beach-bg { filter: brightness(0.85) saturate(1.45) sepia(0.4) hue-rotate(-18deg); }
+        body.night .beach-bg { filter: brightness(0.32) saturate(0.8) hue-rotate(195deg); }
+        body.raining .beach-bg { filter: brightness(0.65) saturate(0.75) contrast(1.08); }
 
-        /* Atmospheric Lighting Overlay (Rapture Golden Sunbeams & Night Glow) */
-        .light-overlay {
+        /* Atmospheric Rapture Glow Overlay */
+        .atmosphere {
             position: fixed;
             inset: 0;
             z-index: 2;
             pointer-events: none;
-            transition: background 1.8s ease;
+            transition: background 1.6s ease;
         }
-        body.morning .light-overlay { background: radial-gradient(circle at 80% 15%, rgba(255, 244, 194, 0.45), transparent 60%); }
-        body.day .light-overlay { background: radial-gradient(circle at 75% 10%, rgba(255, 255, 255, 0.25), transparent 65%); }
-        body.sunset .light-overlay { background: linear-gradient(180deg, rgba(251, 146, 60, 0.35) 0%, rgba(190, 24, 93, 0.2) 50%, rgba(15, 23, 42, 0.5) 100%); }
-        body.night .light-overlay { background: radial-gradient(circle at 20% 85%, rgba(253, 224, 71, 0.22), rgba(9, 13, 22, 0.75) 70%); }
+        body.morning .atmosphere { background: radial-gradient(circle at 85% 20%, rgba(254, 240, 138, 0.38), transparent 60%); }
+        body.day .atmosphere { background: linear-gradient(180deg, rgba(14, 165, 233, 0.12), transparent 50%); }
+        body.sunset .atmosphere { background: linear-gradient(180deg, rgba(249, 115, 22, 0.35) 0%, rgba(190, 24, 93, 0.22) 55%, rgba(15, 23, 42, 0.45) 100%); }
+        body.night .atmosphere { background: radial-gradient(circle at 80% 18%, rgba(226, 232, 240, 0.22), rgba(2, 6, 23, 0.68) 70%); }
 
-        /* Floating Golden Light Motes (Rapture vibe) */
-        .motes { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+        /* Floating Golden Light Motes */
+        .motes { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
         .mote {
             position: absolute;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 248, 200, 0.95) 0%, rgba(253, 224, 71, 0) 70%);
+            background: radial-gradient(circle, rgba(255, 250, 210, 0.9) 0%, rgba(253, 224, 71, 0) 70%);
             animation: floatUp linear infinite;
         }
         @keyframes floatUp {
-            0% { transform: translateY(100vh) scale(0.6); opacity: 0; }
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
             25% { opacity: 0.85; }
             75% { opacity: 0.85; }
             100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
         }
 
-        /* Rain effect */
-        .rain { position: fixed; inset: 0; z-index: 4; pointer-events: none; display: none; background: repeating-linear-gradient(102deg, transparent 0px, transparent 22px, rgba(255,255,255,0.22) 23px, transparent 24px); animation: rainFall 0.55s linear infinite; }
-        body.raining .rain { display: block; }
-        @keyframes rainFall { from { background-position: 0 0; } to { background-position: -24px 48px; } }
+        /* Realistic Canvas Rain */
+        #rain-canvas { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
 
-        /* Top Bar */
-        .top-bar { z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; padding: 26px 34px; flex-wrap: wrap; gap: 14px; }
-        .clock-box {
-            background: rgba(20, 25, 22, 0.45);
-            backdrop-filter: blur(12px);
-            padding: 18px 26px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        /* HUD Layout: Left Clock, Right Weather + Compact Radio */
+        .hud {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 24px 30px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        .time { font-size: 48px; font-weight: 700; letter-spacing: 2px; line-height: 1; font-family: 'Segoe UI', sans-serif; }
-        .date { font-size: 15px; opacity: 0.92; margin-top: 6px; text-transform: capitalize; font-family: 'Segoe UI', sans-serif; }
 
+        .clock-box {
+            background: rgba(15, 23, 42, 0.42);
+            backdrop-filter: blur(12px);
+            padding: 16px 24px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+        }
+        .time { font-size: 46px; font-weight: 700; letter-spacing: 1.5px; line-height: 1; }
+        .date { font-size: 14px; opacity: 0.92; margin-top: 6px; text-transform: capitalize; }
+
+        /* Right Column: Weather Menu + Compact Radio Underneath */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            max-width: 100%;
+        }
         .weather-controls {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             flex-wrap: wrap;
-            background: rgba(20, 25, 22, 0.45);
+            background: rgba(15, 23, 42, 0.45);
             backdrop-filter: blur(12px);
-            padding: 8px;
-            border-radius: 16px;
+            padding: 7px;
+            border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.22);
         }
         .weather-controls button {
             background: transparent;
             border: none;
             color: white;
-            padding: 7px 11px;
-            border-radius: 10px;
+            padding: 6px 10px;
+            border-radius: 9px;
             cursor: pointer;
             font-size: 12px;
             font-weight: 600;
-            font-family: 'Segoe UI', sans-serif;
             transition: 0.2s;
         }
-        .weather-controls button.active, .weather-controls button:hover { background: rgba(255, 255, 255, 0.25); }
-        /* Balcony Foreground & Radio Player */
-        .bottom-area {
-            z-index: 10;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0 16px 28px;
-            background: linear-gradient(180deg, transparent 0%, rgba(15, 20, 16, 0.72) 100%);
+        .weather-controls button.active, .weather-controls button:hover { background: rgba(255, 255, 255, 0.26); }
+
+        /* Compact Radio Box right below Weather Menu */
+        .compact-radio {
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 16px;
+            padding: 12px 16px;
+            width: 340px;
+            max-width: 100%;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.3);
         }
-        .radio-card {
-            background: rgba(24, 28, 25, 0.72);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px;
-            padding: 20px 26px;
-            width: 100%;
-            max-width: 460px;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.45);
-        }
-        .radio-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .station-title { font-size: 15px; font-weight: 700; color: #fef08a; font-family: 'Segoe UI', sans-serif; }
-        .status-badge { font-size: 11px; background: rgba(255,255,255,0.12); padding: 3px 9px; border-radius: 12px; font-family: 'Segoe UI', sans-serif; }
-        .stations-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-        .station-btn {
+        .radio-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .radio-title { font-weight: 700; color: #fde68a; }
+        .radio-status { font-size: 11px; opacity: 0.85; }
+        .station-pills { display: flex; gap: 5px; margin-bottom: 10px; }
+        .station-pills button {
             flex: 1;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.15);
-            color: #f3f4f6;
-            padding: 8px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+            padding: 5px 6px;
+            border-radius: 8px;
+            font-size: 11px;
             cursor: pointer;
-            transition: 0.2s;
         }
-        .station-btn.active { background: #eab308; color: #111; font-weight: 700; border-color: #eab308; }
-        .controls-row { display: flex; align-items: center; gap: 14px; }
+        .station-pills button.active { background: #f59e0b; color: #111; font-weight: 700; border-color: #f59e0b; }
+        .player-bar { display: flex; align-items: center; gap: 10px; }
         .play-btn {
-            background: #eab308;
+            background: #f59e0b;
             color: #111;
             border: none;
-            width: 46px;
-            height: 46px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(234, 179, 8, 0.4);
         }
-        input[type="range"] { flex: 1; accent-color: #eab308; cursor: pointer; }
+        input[type="range"] { flex: 1; accent-color: #f59e0b; cursor: pointer; }
     </style>
 </head>
 <body class="day">
-    <div class="bg-layer bg-image"></div>
-    <div class="light-overlay"></div>
-    <div class="motes" id="motes-container"></div>
-    <div class="rain"></div>
+    <div class="beach-bg"></div>
+    <div class="atmosphere"></div>
+    <div class="motes" id="motes"></div>
+    <canvas id="rain-canvas"></canvas>
 
-    <div class="top-bar">
+    <div class="hud">
         <div class="clock-box">
             <div class="time" id="clock">00:00</div>
             <div class="date" id="date">Φόρτωση...</div>
         </div>
-        <div class="weather-controls">
-            <button class="active" onclick="setMode('auto', this)">🕒 Αυτόματο</button>
-            <button onclick="setMode('morning', this)">🌅 Πρωί</button>
-            <button onclick="setMode('day', this)">☀️ Μέρα</button>
-            <button onclick="setMode('sunset', this)">🌇 Δειλινό</button>
-            <button onclick="setMode('night', this)">🌙 Νύχτα</button>
-            <button onclick="toggleRain(this)">🌧️ Βροχή</button>
-        </div>
-    </div>
 
-    <div class="bottom-area">
-        <div class="radio-card">
-            <div class="radio-header">
-                <div class="station-title" id="current-station-name">🎹 Peaceful Piano & Strings</div>
-                <span class="status-badge" id="radio-status">Έτοιμο</span>
+        <div class="right-panel">
+            <div class="weather-controls">
+                <button class="active" onclick="setMode('auto', this)">🕒 Αυτόματο</button>
+                <button onclick="setMode('morning', this)">🌅 Πρωί</button>
+                <button onclick="setMode('day', this)">☀️ Μέρα</button>
+                <button onclick="setMode('sunset', this)">🌇 Δειλινό</button>
+                <button onclick="setMode('night', this)">🌙 Νύχτα</button>
+                <button onclick="toggleRain(this)">🌧️ Βροχή</button>
             </div>
-            <div class="stations-row">
-                <button class="station-btn active" onclick="selectStation(0, this)">🎹 Soft Piano</button>
-                <button class="station-btn" onclick="selectStation(1, this)">🌿 Garden Chill</button>
-                <button class="station-btn" onclick="selectStation(2, this)">🌙 Night Ambient</button>
+
+            <div class="compact-radio">
+                <div class="radio-top">
+                    <span class="radio-title" id="station-name">🌊 Κύματα & Απαλό Πιάνο</span>
+                    <span class="radio-status" id="radio-status">Έτοιμο</span>
+                </div>
+                <div class="station-pills">
+                    <button class="active" onclick="selectChannel(0, this)">🌊 Κύματα & Πιάνο</button>
+                    <button onclick="selectChannel(1, this)">🎹 Chill Radio</button>
+                    <button onclick="selectChannel(2, this)">🌧️ Βροχή & Ηρεμία</button>
+                </div>
+                <div class="player-bar">
+                    <button class="play-btn" id="play-btn" onclick="toggleAudio()">▶</button>
+                    <span style="font-size:12px;">🔈</span>
+                    <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.6" oninput="updateVolume(this.value)">
+                    <span style="font-size:12px;">🔊</span>
+                </div>
+                <audio id="stream-audio" preload="none"></audio>
             </div>
-            <div class="controls-row">
-                <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
-                <span style="font-size:14px;">🔈</span>
-                <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="audio.volume = this.value">
-                <span style="font-size:14px;">🔊</span>
-            </div>
-            <audio id="radio-audio" crossorigin="anonymous" preload="none"></audio>
         </div>
     </div>
 
 <script>
-    const stations = [
-        { name: "🎹 Peaceful Piano & Strings", url: "https://laut.fm" },
-        { name: "🌿 Garden Chillout & Acoustic", url: "https://laut.fm" },
-        { name: "🌙 Night Ambient & Meditative", url: "https://laut.fm" }
-    ];
-
-    const audio = document.getElementById("radio-audio");
-    const playBtn = document.getElementById("play-btn");
-    const statusBadge = document.getElementById("radio-status");
-    let isPlaying = false;
+    // Clock & Sky Auto Mode
     let autoTime = true;
-
-    audio.src = stations.url;
-    audio.volume = 0.7;
-
-    audio.addEventListener("waiting", () => { statusBadge.textContent = "Φόρτωση..."; });
-    audio.addEventListener("playing", () => { statusBadge.textContent = "🟢 Live"; });
-    audio.addEventListener("pause", () => { statusBadge.textContent = "Παύση"; });
-    audio.addEventListener("error", () => { statusBadge.textContent = "Δοκιμάστε άλλον σταθμό"; });
-
-    function togglePlay() {
-        if (!isPlaying) {
-            statusBadge.textContent = "Σύνδεση...";
-            audio.play().then(() => {
-                isPlaying = true;
-                playBtn.textContent = "⏸";
-            }).catch(() => {
-                statusBadge.textContent = "Πατήστε ξανά ▶";
-            });
-        } else {
-            audio.pause();
-            isPlaying = false;
-            playBtn.textContent = "▶";
-        }
-    }
-
-    function selectStation(idx, btn) {
-        document.querySelectorAll(".station-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById("current-station-name").textContent = stations[idx].name;
-        audio.src = stations[idx].url;
-        if (isPlaying) {
-            statusBadge.textContent = "Σύνδεση...";
-            audio.play();
-        }
-    }
-
     function applySkyByHour(hour) {
         const isRaining = document.body.classList.contains("raining");
         document.body.className = isRaining ? "raining " : "";
@@ -259,49 +211,178 @@
         else if (hour >= 17 && hour < 20) document.body.classList.add("sunset");
         else document.body.classList.add("night");
     }
-
     function setMode(mode, btn) {
         document.querySelectorAll(".weather-controls button:not(:last-child)").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         const isRaining = document.body.classList.contains("raining");
-        if (mode === "auto") {
-            autoTime = true;
-            applySkyByHour(new Date().getHours());
-        } else {
-            autoTime = false;
-            document.body.className = (isRaining ? "raining " : "") + mode;
-        }
+        if (mode === "auto") { autoTime = true; applySkyByHour(new Date().getHours()); }
+        else { autoTime = false; document.body.className = (isRaining ? "raining " : "") + mode; }
     }
-
-    function toggleRain(btn) {
-        document.body.classList.toggle("raining");
-        btn.classList.toggle("active");
-    }
-
     function updateClock() {
         const now = new Date();
         document.getElementById("clock").textContent = now.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
         document.getElementById("date").textContent = now.toLocaleDateString("el-GR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
         if (autoTime) applySkyByHour(now.getHours());
     }
-
-    // Create floating golden light motes (Rapture aesthetic)
-    const motesContainer = document.getElementById("motes-container");
-    for (let i = 0; i < 22; i++) {
-        const m = document.createElement("div");
-        m.className = "mote";
-        const size = Math.random() * 14 + 6;
-        m.style.width = size + "px";
-        m.style.height = size + "px";
-        m.style.left = Math.random() * 100 + "vw";
-        m.style.animationDuration = (Math.random() * 12 + 10) + "s";
-        m.style.animationDelay = (Math.random() * 10) + "s";
-        motesContainer.appendChild(m);
-    }
-
     updateClock();
     setInterval(updateClock, 1000);
+
+    // Realistic Canvas Rain Animation
+    const canvas = document.getElementById("rain-canvas");
+    const ctx = canvas.getContext("2d");
+    let isRaining = false;
+    let drops = [];
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    for (let i = 0; i < 180; i++) {
+        drops.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, len: Math.random() * 18 + 10, speed: Math.random() * 8 + 7, opacity: Math.random() * 0.4 + 0.2 });
+    }
+    function animateRain() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (isRaining) {
+            ctx.strokeStyle = "rgba(220, 238, 255, 0.55)";
+            ctx.lineWidth = 1.2;
+            drops.forEach(d => {
+                ctx.beginPath();
+                ctx.moveTo(d.x, d.y);
+                ctx.lineTo(d.x - 2.5, d.y + d.len);
+                ctx.stroke();
+                d.y += d.speed;
+                d.x -= 1.2;
+                if (d.y > canvas.height) { d.y = -20; d.x = Math.random() * canvas.width; }
+            });
+        }
+        requestAnimationFrame(animateRain);
+    }
+    animateRain();
+    function toggleRain(btn) {
+        isRaining = !isRaining;
+        document.body.classList.toggle("raining");
+        btn.classList.toggle("active");
+    }
+
+    // Floating Golden Light Motes
+    const motesEl = document.getElementById("motes");
+    for (let i = 0; i < 20; i++) {
+        const m = document.createElement("div");
+        m.className = "mote";
+        const s = Math.random() * 12 + 5;
+        m.style.width = s + "px"; m.style.height = s + "px";
+        m.style.left = Math.random() * 100 + "vw";
+        m.style.animationDuration = (Math.random() * 12 + 10) + "s";
+        m.style.animationDelay = (Math.random() * 8) + "s";
+        motesEl.appendChild(m);
+    }
+
+    // Guaranteed Audio Engine (Web Audio Synth + Live Radio Stream)
+    let audioCtx = null, masterGain = null, noiseNode = null, chordInterval = null;
+    let isPlaying = false, currentChannel = 0;
+    const streamAudio = document.getElementById("stream-audio");
+    const playBtn = document.getElementById("play-btn");
+    const statusEl = document.getElementById("radio-status");
+
+    function startAmbientSynth(type) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        stopAllAudio();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = document.getElementById("vol-slider").value * 0.4;
+        masterGain.connect(audioCtx.destination);
+
+        // Soft Pink/Brown Noise for Ocean Waves or Rain
+        const bufferSize = 2 * audioCtx.sampleRate;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            output[i] = (lastOut + (0.02 * white)) / 1.02;
+            lastOut = output[i];
+            output[i] *= 2.5;
+        }
+        noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+        noiseNode.loop = true;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = type === "rain" ? 900 : 320;
+        noiseNode.connect(filter);
+        filter.connect(masterGain);
+        noiseNode.start();
+
+        // Soft Gentle Piano Chords if channel 0
+        if (type === "waves_piano") {
+            const notes = [261.63, 329.63, 392.00, 493.88, 293.66, 349.23, 440.00];
+            chordInterval = setInterval(() => {
+                if (!isPlaying) return;
+                const osc = audioCtx.createOscillator();
+                const noteGain = audioCtx.createGain();
+                osc.type = "sine";
+                osc.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+                noteGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                noteGain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.8);
+                noteGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 4.5);
+                osc.connect(noteGain);
+                noteGain.connect(masterGain);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 4.6);
+            }, 3200);
+        }
+    }
+
+    function stopAllAudio() {
+        streamAudio.pause();
+        if (noiseNode) { try { noiseNode.stop(); } catch(e){} noiseNode = null; }
+        if (chordInterval) { clearInterval(chordInterval); chordInterval = null; }
+    }
+
+    function toggleAudio() {
+        if (!isPlaying) {
+            isPlaying = true;
+            playBtn.textContent = "⏸";
+            playChannel(currentChannel);
+        } else {
+            isPlaying = false;
+            playBtn.textContent = "▶";
+            statusEl.textContent = "Παύση";
+            stopAllAudio();
+        }
+    }
+
+    function selectChannel(idx, btn) {
+        currentChannel = idx;
+        document.querySelectorAll(".station-pills button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const names = ["🌊 Κύματα & Απαλό Πιάνο", "🎹 Chill Lounge Radio", "🌧️ Βροχή & Ηρεμία"];
+        document.getElementById("station-name").textContent = names[idx];
+        if (isPlaying) playChannel(idx);
+    }
+
+    function playChannel(idx) {
+        stopAllAudio();
+        if (idx === 0) {
+            statusEl.textContent = "🟢 Παίζει";
+            startAmbientSynth("waves_piano");
+        } else if (idx === 1) {
+            statusEl.textContent = "Σύνδεση...";
+            streamAudio.src = "https://laut.fm";
+            streamAudio.volume = document.getElementById("vol-slider").value;
+            streamAudio.play().then(() => { statusEl.textContent = "🟢 Live Radio"; }).catch(() => {
+                statusEl.textContent = "🟢 Παίζει (Ambient)";
+                startAmbientSynth("waves_piano");
+            });
+        } else {
+            statusEl.textContent = "🟢 Παίζει";
+            startAmbientSynth("rain");
+        }
+    }
+
+    function updateVolume(val) {
+        streamAudio.volume = val;
+        if (masterGain) masterGain.gain.value = val * 0.4;
+    }
 </script>
-</body>
-</html>
+
 
